@@ -55,29 +55,29 @@ export default function Navbar() {
             <span className="font-bold text-xl tracking-tight">CrisisGrid</span>
           </Link>
 
-          <div className="flex items-center space-x-3">
-            <Link href="/education" className="hidden sm:flex items-center text-xs font-bold bg-sky-500 text-white px-3 py-1.5 rounded-full hover:bg-sky-400 transition-colors">
-              <BookOpen className="w-3 h-3 mr-1" /> Afet Rehberi
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <Link href="/education" className="flex items-center text-xs font-bold bg-sky-500 text-white px-2.5 py-1.5 sm:px-3 rounded-full hover:bg-sky-400 transition-colors" title="Afet Rehberi">
+              <BookOpen className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">Afet Rehberi</span>
             </Link>
-            <Link href="/dashboard" className="hidden sm:block text-xs font-bold bg-white text-primary-navy px-3 py-1.5 rounded-full hover:bg-slate-200 transition-colors">
-              AFAD Yönetim Paneli
+            <Link href="/dashboard" className="flex items-center text-xs font-bold bg-white text-primary-navy px-2.5 py-1.5 sm:px-3 rounded-full hover:bg-slate-200 transition-colors" title="AFAD Yönetim Paneli">
+              <ShieldAlert className="w-4 h-4 sm:mr-1 sm:hidden" /> <span className="hidden sm:inline">AFAD Paneli</span>
             </Link>
             {hasLocation && (
               <div className="hidden sm:flex items-center space-x-1 bg-white/10 px-3 py-1.5 rounded-full text-xs font-medium">
                 <MapPin className="w-3 h-3 text-blue-400" />
-                <span>GPS Aktif</span>
+                <span>GPS</span>
               </div>
             )}
-            <div className="flex items-center space-x-2 bg-white/10 px-3 py-1.5 rounded-full text-sm font-medium transition-colors">
+            <div className="flex items-center space-x-1 sm:space-x-2 bg-white/10 px-2.5 py-1.5 sm:px-3 rounded-full text-xs sm:text-sm font-medium transition-colors">
               {isOnline ? (
                 <>
                   <Wifi className="w-4 h-4 text-green-400" />
-                  <span>Çevrimiçi</span>
+                  <span className="hidden sm:inline">Çevrimiçi</span>
                 </>
               ) : (
                 <>
                   <WifiOff className="w-4 h-4 text-warning-amber" />
-                  <span className="text-warning-amber">Çevrimdışı Mod</span>
+                  <span className="hidden sm:inline text-warning-amber">Çevrimdışı</span>
                 </>
               )}
             </div>
