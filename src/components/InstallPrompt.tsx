@@ -44,7 +44,11 @@ export default function InstallPrompt() {
       return;
     }
 
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      // Eğer Chrome henüz hazır değilse veya izin vermiyorsa manuel yönlendirme çıkar
+      alert("Otomatik yükleme şu an hazır değil. Lütfen tarayıcınızın sağ üst köşesindeki (üç nokta) menüsünden 'Ana Ekrana Ekle' veya 'Uygulamayı Yükle' seçeneğine tıklayın.");
+      return;
+    }
 
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
@@ -56,7 +60,7 @@ export default function InstallPrompt() {
   };
 
   // Eğer zaten PWA modundaysak hiçbir şey gösterme
-  if (isStandalone || !isInstallable) return null;
+  if (isStandalone) return null;
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 flex flex-col items-center">
