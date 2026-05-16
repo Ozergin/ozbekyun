@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, HandHeart, Radio, MapPin, UserCircle, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import InstallPrompt from "@/components/InstallPrompt";
+import BluetoothMesh from "@/components/BluetoothMesh";
 
 export default function Home() {
   const router = useRouter();
@@ -230,24 +231,8 @@ export default function Home() {
       {/* PWA Install Prompt - Sadece anasayfada yüklü değilse çıkar */}
       <InstallPrompt />
       
-      {/* Sync Simulation */}
-      <div className="w-full flex flex-col items-center bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-8">
-        <h3 className="text-lg font-semibold text-primary-navy mb-4">Gossip Protokolü (P2P Veri Aktarımı)</h3>
-        <button 
-          onClick={handleSync}
-          disabled={syncing}
-          className="flex items-center space-x-3 bg-slate-100 hover:bg-slate-200 text-primary-navy font-bold py-4 px-8 rounded-full transition-colors disabled:opacity-50"
-        >
-          {syncing ? (
-            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}>
-              <Radio className="w-6 h-6 text-warning-amber" />
-            </motion.div>
-          ) : (
-            <Radio className="w-6 h-6" />
-          )}
-          <span>{syncing ? "Yakındaki cihazlar aranıyor..." : "Cihazlar Arası Senkronize Et"}</span>
-        </button>
-      </div>
+      {/* Real Web Bluetooth Gossip Protocol Simulation */}
+      <BluetoothMesh />
 
       {/* Map Mock */}
       <div className="w-full bg-slate-200 rounded-2xl overflow-hidden h-80 relative flex items-center justify-center border border-slate-300 shadow-inner">
