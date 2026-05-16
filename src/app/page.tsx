@@ -23,7 +23,61 @@ export default function Home() {
       const profile = JSON.parse(profileStr);
       setUserProfile(profile);
 
-      // Kendi yardım ve gönüllü çağrısını bulmak için API'ye istek at
+      // Çevrimdışı senkronizasyon kuyruğunu işle
+      const processOfflineQueue = async () => {
+        if (!navigator.onLine) return;
+        
+        const queue = JSON.parse(localStorage.getItem("offline_sync_queue") || "[]");
+        if (queue.length === 0) return;
+
+        let remainingQueue = [];
+        let syncedCount = 0;
+
+        for (const item of queue) {
+          try {
+            // ID'yi geçici vermiştik, veritabanı kendi ID atasın diye siliyoruz
+            const payloadToSend = { ...item.payload };
+            delete payloadToSend.id;
+
+            const res = await fetch(item.endpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payloadToSend)
+            });
+            if (res.ok) {
+              const data = await res.json();
+              syncedCount++;
+              
+              // Başarıyla senkronize olunca kendi aktif ID'sini de güncelle
+              if (item.endpoint === '/api/db/reports') {
+                localStorage.setItem("my_active_report_id", data.id.toString());
+              } else if (item.endpoint === '/api/db/volunteers') {
+                localStorage.setItem("my_active_volunteer_id", data.id.toString());
+              }
+            } else {
+              remainingQueue.push(item);
+            }
+          } catch (e) {
+            remainingQueue.push(item);
+          }
+        }
+        
+        localStorage.setItem("offline_sync_queue", JSON.stringify(remainingQueue));
+        if (syncedCount > 0) {
+          alert(`${syncedCount} adet çevrimdışı taslak başarıyla merkeze iletildi!`);
+        }
+      };
+
+      // Kendi çağrısını önce Cache'den bul
+      const cachedReports = JSON.parse(localStorage.getItem("crisis_reports_cache") || "[]");
+      const activeRep = cachedReports.find((r: any) => r.phone === profile.phone);
+      if (activeRep) setMyActiveReport(activeRep);
+
+      const cachedVols = JSON.parse(localStorage.getItem("volunteer_reports_cache") || "[]");
+      const activeVol = cachedVols.find((r: any) => r.phone === profile.phone);
+      if (activeVol) setMyActiveVolunteer(activeVol);
+
+      // Arka planda API'den günceli çek ve Cache'i tazele
       const fetchMyRecords = async () => {
         try {
           const [resRep, resVol] = await Promise.all([
@@ -33,21 +87,23 @@ export default function Home() {
           
           if (resRep.ok) {
             const reports = await resRep.json();
-            const activeRep = reports.find((r: any) => r.phone === profile.phone);
-            setMyActiveReport(activeRep || null);
+            localStorage.setItem("crisis_reports_cache", JSON.stringify(reports));
+            const liveRep = reports.find((r: any) => r.phone === profile.phone);
+            setMyActiveReport(liveRep || null);
           }
 
           if (resVol.ok) {
             const vols = await resVol.json();
-            const activeVol = vols.find((r: any) => r.phone === profile.phone);
-            setMyActiveVolunteer(activeVol || null);
+            localStorage.setItem("volunteer_reports_cache", JSON.stringify(vols));
+            const liveVol = vols.find((r: any) => r.phone === profile.phone);
+            setMyActiveVolunteer(liveVol || null);
           }
         } catch (e) {
-          console.error(e);
+          console.log("Offline mode: Using cached records.");
         }
       };
       
-      fetchMyRecords();
+      processOfflineQueue().then(fetchMyRecords);
     }
   }, [router]);
 

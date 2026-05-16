@@ -241,29 +241,55 @@ export default function ReportPage() {
         priority: priority || "P3",
       };
 
-      const res = await fetch('/api/db/reports', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newReport)
-      });
-      
-      if (res.ok) {
-        const data = await res.json();
-        // Sadece kendi cihazında "benim kaydım var" bilgisini tutmak için
-        localStorage.setItem("my_active_report_id", data.id.toString());
+      if (navigator.onLine) {
+        const res = await fetch('/api/db/reports', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newReport)
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          localStorage.setItem("my_active_report_id", data.id.toString());
+          localStorage.setItem("my_active_report_phone", formData.phone);
+          alert(`Yardım talebiniz ve konumunuz (${locationStr}) CANLI olarak Supabase'e iletildi!`);
+        } else {
+          throw new Error("Server error");
+        }
+      } else {
+        // Çevrimdışı senaryo: Kuyruğa ekle
+        const queue = JSON.parse(localStorage.getItem("offline_sync_queue") || "[]");
+        newReport.id = Date.now(); // Geçici ID
+        queue.push({ endpoint: '/api/db/reports', payload: newReport });
+        localStorage.setItem("offline_sync_queue", JSON.stringify(queue));
+        
+        // Yerel yedeği (cache) de güncelle ki dashboard'da hemen görünsün
+        const cache = JSON.parse(localStorage.getItem("crisis_reports_cache") || "[]");
+        localStorage.setItem("crisis_reports_cache", JSON.stringify([newReport, ...cache]));
+        
         localStorage.setItem("my_active_report_phone", formData.phone);
+        alert(`Cihazınız çevrimdışı. Çağrınız yerel hafızaya alındı, internet geldiğinde gönderilecek!`);
       }
 
-      if (navigator.onLine) {
-        alert(`Yardım talebiniz ve haritada işaretlediğiniz konum (${locationStr}) CANLI olarak Supabase Küresel Veritabanına iletildi!`);
-      } else {
-        alert(`Cihazınız çevrimdışı. Bağlantı geldiğinde gönderilecektir.`);
-      }
       localStorage.removeItem("crisis_form_draft");
       router.push("/dashboard");
     } catch (error) {
       console.error(error);
-      alert("Gönderim sırasında bir hata oluştu.");
+      
+      // Fetch hata verdiyse de çevrimdışı gibi davranıp kuyruğa al
+      const queue = JSON.parse(localStorage.getItem("offline_sync_queue") || "[]");
+      const tempReport = { ...formData, type: 'victim', priority: priority || "P3", lat: mapLocation?.lat, lng: mapLocation?.lng, id: Date.now() };
+      queue.push({ endpoint: '/api/db/reports', payload: tempReport });
+      localStorage.setItem("offline_sync_queue", JSON.stringify(queue));
+      
+      const cache = JSON.parse(localStorage.getItem("crisis_reports_cache") || "[]");
+      localStorage.setItem("crisis_reports_cache", JSON.stringify([tempReport, ...cache]));
+      localStorage.setItem("my_active_report_phone", formData.phone);
+      
+      alert(`Bağlantı hatası yaşandı! Veri yerel hafızaya kaydedildi, internet düzelince gönderilecek.`);
+      localStorage.removeItem("crisis_form_draft");
+      router.push("/dashboard");
+    } finally {
       setIsSending(false);
     }
   };

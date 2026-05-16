@@ -21,6 +21,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchReports = async () => {
+      // Önce yerel önbellekten (Cache) yükle ki çevrimdışıysa ekran boşalmasın
+      const cachedVictims = JSON.parse(localStorage.getItem("crisis_reports_cache") || "[]");
+      const cachedVols = JSON.parse(localStorage.getItem("volunteer_reports_cache") || "[]");
+      if (cachedVictims.length > 0) setVictimReports(cachedVictims);
+      if (cachedVols.length > 0) setVolunteerReports(cachedVols);
+
+      // Sonra arka planda API'den güncel veriyi çekmeye çalış (İnternet varsa)
       try {
         const [resVictims, resVols] = await Promise.all([
           fetch('/api/db/reports'),
@@ -30,19 +37,22 @@ export default function DashboardPage() {
         if (resVictims.ok) {
           const data = await resVictims.json();
           setVictimReports(data);
+          localStorage.setItem("crisis_reports_cache", JSON.stringify(data)); // Cache'i tazele
         }
         
         if (resVols.ok) {
           const data = await resVols.json();
           setVolunteerReports(data);
+          localStorage.setItem("volunteer_reports_cache", JSON.stringify(data)); // Cache'i tazele
         }
       } catch (err) {
-        console.error("Error fetching data from Supabase:", err);
+        // Hata verirse (çevrimdışı vb.) sessizce yut, çünkü zaten ekranda Cache verisi var!
+        console.log("Offline mode: Using cached data.");
       }
     };
     
     fetchReports();
-    const interval = setInterval(fetchReports, 3000); // 3 saniyede bir poll
+    const interval = setInterval(fetchReports, 5000); // 5 saniyede bir poll
     return () => clearInterval(interval);
   }, []);
 

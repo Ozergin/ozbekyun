@@ -110,29 +110,55 @@ export default function VolunteerPage() {
         lng: mapLocation?.lng,
       };
 
-      const res = await fetch('/api/db/volunteers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newReport)
-      });
-      
-      if (res.ok) {
-        const data = await res.json();
-        // Sadece kendi cihazında "benim kaydım var" bilgisini tutmak için
-        localStorage.setItem("my_active_volunteer_id", data.id.toString());
+      if (navigator.onLine) {
+        const res = await fetch('/api/db/volunteers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newReport)
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          localStorage.setItem("my_active_volunteer_id", data.id.toString());
+          localStorage.setItem("my_active_volunteer_phone", formData.phone);
+          alert(`Gönüllü bildiriminiz ve konumunuz AFAD sistemine başarıyla Supabase üzerinden iletildi!`);
+        } else {
+          throw new Error("Server error");
+        }
+      } else {
+        // Çevrimdışı senaryo: Kuyruğa ekle
+        const queue = JSON.parse(localStorage.getItem("offline_sync_queue") || "[]");
+        newReport.id = Date.now();
+        queue.push({ endpoint: '/api/db/volunteers', payload: newReport });
+        localStorage.setItem("offline_sync_queue", JSON.stringify(queue));
+        
+        // Yerel yedeği (cache) güncelle
+        const cache = JSON.parse(localStorage.getItem("volunteer_reports_cache") || "[]");
+        localStorage.setItem("volunteer_reports_cache", JSON.stringify([newReport, ...cache]));
+        
         localStorage.setItem("my_active_volunteer_phone", formData.phone);
+        alert(`Cihazınız çevrimdışı. Gönüllü kaydınız yerel hafızaya alındı, internet geldiğinde iletilecektir.`);
       }
 
-      if (navigator.onLine) {
-        alert(`Gönüllü bildiriminiz ve konumunuz AFAD sistemine başarıyla Supabase üzerinden iletildi!`);
-      } else {
-        alert(`Cihazınız çevrimdışı. Gönüllü kaydınız kaydedildi. İnternet bağlantısı sağlandığında iletilecektir.`);
-      }
       localStorage.removeItem("volunteer_form_draft");
       router.push("/dashboard");
     } catch (error) {
       console.error(error);
-      alert("Gönderim sırasında bir hata oluştu.");
+      
+      // Fetch hata verirse de çevrimdışı gibi davranıp kuyruğa al
+      const queue = JSON.parse(localStorage.getItem("offline_sync_queue") || "[]");
+      const tempVol = { ...formData, type: 'volunteer', lat: mapLocation?.lat, lng: mapLocation?.lng, id: Date.now() };
+      queue.push({ endpoint: '/api/db/volunteers', payload: tempVol });
+      localStorage.setItem("offline_sync_queue", JSON.stringify(queue));
+      
+      const cache = JSON.parse(localStorage.getItem("volunteer_reports_cache") || "[]");
+      localStorage.setItem("volunteer_reports_cache", JSON.stringify([tempVol, ...cache]));
+      localStorage.setItem("my_active_volunteer_phone", formData.phone);
+      
+      alert(`Bağlantı hatası! Veri yerel hafızaya kaydedildi, internet düzelince gönderilecek.`);
+      localStorage.removeItem("volunteer_form_draft");
+      router.push("/dashboard");
+    } finally {
       setIsSending(false);
     }
   };
