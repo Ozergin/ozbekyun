@@ -47,7 +47,7 @@ const iconVol = new L.Icon({
   shadowSize: [41, 41]
 });
 
-export default function DashboardMap({ reports, focusedReportId }: { reports: any[], focusedReportId: number | null }) {
+export default function DashboardMap({ reports, focusedReportId, isWidget = false }: { reports: any[], focusedReportId: number | null, isWidget?: boolean }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const markersLayer = useRef<L.LayerGroup | null>(null);
@@ -57,7 +57,10 @@ export default function DashboardMap({ reports, focusedReportId }: { reports: an
     if (!mapRef.current) return;
 
     if (!mapInstance.current) {
-      const map = L.map(mapRef.current).setView([39.0, 35.0], 6);
+      const map = L.map(mapRef.current, {
+        scrollWheelZoom: !isWidget,
+        zoomControl: !isWidget
+      }).setView([39.0, 35.0], isWidget ? 5 : 6);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap'
       }).addTo(map);

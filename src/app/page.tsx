@@ -7,6 +7,7 @@ import { AlertTriangle, HandHeart, Radio, MapPin, UserCircle, CheckCircle2 } fro
 import { motion } from "framer-motion";
 import InstallPrompt from "@/components/InstallPrompt";
 import BluetoothMesh from "@/components/BluetoothMesh";
+import LiveMapWidget from "@/components/LiveMapWidget";
 
 export default function Home() {
   const router = useRouter();
@@ -234,26 +235,9 @@ export default function Home() {
       {/* Real Web Bluetooth Gossip Protocol Simulation */}
       <BluetoothMesh />
 
-      {/* Map Mock */}
-      <div className="w-full bg-slate-200 rounded-2xl overflow-hidden h-80 relative flex items-center justify-center border border-slate-300 shadow-inner">
-        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg width=\\'60\\' height=\\'60\\' viewBox=\\'0 0 60 60\\' xmlns=\\'http://www.w3.org/2000/svg\\'%3E%3Cg fill=\\'none\\' fill-rule=\\'evenodd\\'%3E%3Cg fill=\\'%230f172a\\' fill-opacity=\\'0.4\\'%3E%3Cpath d=\\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')" }}></div>
-        <div className="z-10 flex flex-col items-center space-y-2">
-          <MapPin className="w-12 h-12 text-primary-navy" />
-          <span className="bg-white/90 px-4 py-2 rounded-lg font-semibold text-primary-navy shadow">
-            Acil Durum Haritası (Cluster Görünümü)
-          </span>
-        </div>
-        
-        {/* Mock Pins */}
-        <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute top-1/4 left-1/4 bg-warning-amber text-white font-bold w-10 h-10 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
-          3
-        </motion.div>
-        <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 2, delay: 0.5 }} className="absolute bottom-1/3 right-1/3 bg-red-600 text-white font-bold w-12 h-12 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
-          12
-        </motion.div>
-        <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 2, delay: 1 }} className="absolute top-1/2 right-1/4 bg-primary-green text-white font-bold w-8 h-8 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
-          1
-        </motion.div>
+      {/* Live Map Widget */}
+      <div className="w-full mb-8">
+        <LiveMapWidget />
       </div>
 
     </div>
