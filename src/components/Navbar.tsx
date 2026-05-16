@@ -106,7 +106,7 @@ export default function Navbar() {
 
       {/* Mobile Dropdown Menu */}
       {isMobileMenuOpen && (
-        <div className="sm:hidden bg-slate-800 border-t border-slate-700 absolute w-full left-0 shadow-xl">
+        <div className="sm:hidden bg-slate-800 border-t border-slate-700 absolute top-full w-full left-0 shadow-xl">
           <div className="px-4 pt-4 pb-6 space-y-4 flex flex-col">
             <Link 
               href="/education" 
