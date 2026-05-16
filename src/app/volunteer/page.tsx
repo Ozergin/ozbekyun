@@ -98,7 +98,7 @@ export default function VolunteerPage() {
     try {
       const locationStr = mapLocation ? `${mapLocation.lat.toFixed(6)}, ${mapLocation.lng.toFixed(6)}` : "Konum Yok";
       
-      const newReport = {
+      const newReport: any = {
         type: 'volunteer',
         name: formData.name,
         phone: formData.phone,

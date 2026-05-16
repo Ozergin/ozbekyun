@@ -230,7 +230,7 @@ export default function ReportPage() {
     try {
       const locationStr = mapLocation ? `${mapLocation.lat.toFixed(6)}, ${mapLocation.lng.toFixed(6)}` : "Konum Yok";
       
-      const newReport = {
+      const newReport: any = {
         type: 'victim',
         name: formData.name,
         phone: formData.phone,
