@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, HandHeart, Radio, MapPin, UserCircle, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
+import InstallPrompt from "@/components/InstallPrompt";
 
 export default function Home() {
   const router = useRouter();
@@ -225,7 +226,10 @@ export default function Home() {
           </Link>
         </div>
       </div>
-
+      
+      {/* PWA Install Prompt - Sadece anasayfada yüklü değilse çıkar */}
+      <InstallPrompt />
+      
       {/* Sync Simulation */}
       <div className="w-full flex flex-col items-center bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-8">
         <h3 className="text-lg font-semibold text-primary-navy mb-4">Gossip Protokolü (P2P Veri Aktarımı)</h3>
