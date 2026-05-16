@@ -78,6 +78,19 @@ export default function DashboardMap({ reports, focusedReportId, isWidget = fals
     };
   }, []);
 
+  // isWidget prop'u değiştiğinde haritayı güncelle (Tam Ekran geçişleri için)
+  useEffect(() => {
+    if (mapInstance.current) {
+      if (isWidget) {
+        mapInstance.current.scrollWheelZoom.disable();
+      } else {
+        mapInstance.current.scrollWheelZoom.enable();
+        // Harita boyutu değiştiğinde tiles'ların gri kalmasını engeller
+        setTimeout(() => mapInstance.current?.invalidateSize(), 300);
+      }
+    }
+  }, [isWidget]);
+
   // 2. Raporlar değiştikçe pinleri güncelle
   useEffect(() => {
     if (!mapInstance.current || !markersLayer.current) return;

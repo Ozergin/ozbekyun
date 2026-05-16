@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from 'next/dynamic';
-import { Maximize2, MapPin } from "lucide-react";
-import Link from "next/link";
+import { Maximize2, Minimize2, MapPin } from "lucide-react";
 
 const DashboardMap = dynamic(() => import('@/components/DashboardMap'), { 
   ssr: false, 
@@ -17,6 +16,7 @@ const DashboardMap = dynamic(() => import('@/components/DashboardMap'), {
 
 export default function LiveMapWidget() {
   const [reports, setReports] = useState<any[]>([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     const fetchWidgetData = async () => {
@@ -57,11 +57,15 @@ export default function LiveMapWidget() {
   }, []);
 
   return (
-    <div className="w-full rounded-2xl overflow-hidden h-96 relative flex items-center justify-center border border-slate-300 shadow-xl group">
+    <div className={
+      isFullscreen 
+        ? "fixed inset-0 z-[100] w-full h-full bg-slate-900" 
+        : "w-full rounded-2xl overflow-hidden h-96 relative flex items-center justify-center border border-slate-300 shadow-xl group"
+    }>
       
       {/* Harita Bileşeni */}
       <div className="absolute inset-0 z-0 pointer-events-auto">
-        <DashboardMap reports={reports} focusedReportId={null} isWidget={true} />
+        <DashboardMap reports={reports} focusedReportId={null} isWidget={!isFullscreen} />
       </div>
 
       {/* Üst Bilgi Katmanı */}
@@ -77,10 +81,22 @@ export default function LiveMapWidget() {
 
       {/* Tam Ekran Butonu */}
       <div className="absolute bottom-4 right-4 z-10">
-        <Link href="/dashboard" className="bg-primary-navy hover:bg-slate-800 text-white font-bold px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-2 transition-transform transform hover:scale-105 active:scale-95 border-2 border-white/20">
-          <Maximize2 className="w-5 h-5" />
-          <span>Tam Ekran Büyüt</span>
-        </Link>
+        <button 
+          onClick={() => setIsFullscreen(!isFullscreen)}
+          className="bg-primary-navy hover:bg-slate-800 text-white font-bold px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-2 transition-transform transform hover:scale-105 active:scale-95 border-2 border-white/20"
+        >
+          {isFullscreen ? (
+            <>
+              <Minimize2 className="w-5 h-5" />
+              <span>Küçült</span>
+            </>
+          ) : (
+            <>
+              <Maximize2 className="w-5 h-5" />
+              <span>Tam Ekran Büyüt</span>
+            </>
+          )}
+        </button>
       </div>
       
     </div>
