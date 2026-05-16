@@ -23,15 +23,31 @@ export default function Home() {
       const profile = JSON.parse(profileStr);
       setUserProfile(profile);
 
-      // Kendi yardım çağrısını bul
-      const reports = JSON.parse(localStorage.getItem("crisis_reports") || "[]");
-      const activeRep = reports.find((r: any) => r.phone === profile.phone);
-      if (activeRep) setMyActiveReport(activeRep);
+      // Kendi yardım ve gönüllü çağrısını bulmak için API'ye istek at
+      const fetchMyRecords = async () => {
+        try {
+          const [resRep, resVol] = await Promise.all([
+            fetch('/api/db/reports'),
+            fetch('/api/db/volunteers')
+          ]);
+          
+          if (resRep.ok) {
+            const reports = await resRep.json();
+            const activeRep = reports.find((r: any) => r.phone === profile.phone);
+            setMyActiveReport(activeRep || null);
+          }
 
-      // Kendi gönüllü çağrısını bul
-      const vols = JSON.parse(localStorage.getItem("volunteer_reports") || "[]");
-      const activeVol = vols.find((r: any) => r.phone === profile.phone);
-      if (activeVol) setMyActiveVolunteer(activeVol);
+          if (resVol.ok) {
+            const vols = await resVol.json();
+            const activeVol = vols.find((r: any) => r.phone === profile.phone);
+            setMyActiveVolunteer(activeVol || null);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      };
+      
+      fetchMyRecords();
     }
   }, [router]);
 
@@ -40,20 +56,26 @@ export default function Home() {
     setTimeout(() => setSyncing(false), 3000);
   };
 
-  const handleCancelReport = () => {
+  const handleCancelReport = async () => {
     if(!confirm("Yardım çağrınızı silmek ve 'Kurtarıldım' olarak işaretlemek istediğinize emin misiniz?")) return;
-    const reports = JSON.parse(localStorage.getItem("crisis_reports") || "[]");
-    const filtered = reports.filter((r: any) => r.id !== myActiveReport.id);
-    localStorage.setItem("crisis_reports", JSON.stringify(filtered));
-    setMyActiveReport(null);
+    try {
+      await fetch(`/api/db/reports?id=${myActiveReport.id}`, { method: 'DELETE' });
+      setMyActiveReport(null);
+      localStorage.removeItem('my_active_report_id');
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const handleCancelVolunteer = () => {
+  const handleCancelVolunteer = async () => {
     if(!confirm("Gönüllü kaydınızı silmek istediğinize emin misiniz?")) return;
-    const vols = JSON.parse(localStorage.getItem("volunteer_reports") || "[]");
-    const filtered = vols.filter((r: any) => r.id !== myActiveVolunteer.id);
-    localStorage.setItem("volunteer_reports", JSON.stringify(filtered));
-    setMyActiveVolunteer(null);
+    try {
+      await fetch(`/api/db/volunteers?id=${myActiveVolunteer.id}`, { method: 'DELETE' });
+      setMyActiveVolunteer(null);
+      localStorage.removeItem('my_active_volunteer_id');
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   if (!userProfile) return null;

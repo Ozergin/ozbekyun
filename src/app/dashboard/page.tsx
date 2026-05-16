@@ -20,12 +20,25 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'victims' | 'volunteers'>('victims');
 
   useEffect(() => {
-    const fetchReports = () => {
-      const victims = JSON.parse(localStorage.getItem("crisis_reports") || "[]").map((r: any) => ({ ...r, type: 'victim' }));
-      const volunteers = JSON.parse(localStorage.getItem("volunteer_reports") || "[]").map((r: any) => ({ ...r, type: 'volunteer' }));
-      
-      setVictimReports(victims);
-      setVolunteerReports(volunteers);
+    const fetchReports = async () => {
+      try {
+        const [resVictims, resVols] = await Promise.all([
+          fetch('/api/db/reports'),
+          fetch('/api/db/volunteers')
+        ]);
+        
+        if (resVictims.ok) {
+          const data = await resVictims.json();
+          setVictimReports(data);
+        }
+        
+        if (resVols.ok) {
+          const data = await resVols.json();
+          setVolunteerReports(data);
+        }
+      } catch (err) {
+        console.error("Error fetching data from Supabase:", err);
+      }
     };
     
     fetchReports();

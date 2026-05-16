@@ -91,32 +91,50 @@ export default function VolunteerPage() {
     setHasManuallyMoved(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSending(true);
     
-    setTimeout(() => {
+    try {
       const locationStr = mapLocation ? `${mapLocation.lat.toFixed(6)}, ${mapLocation.lng.toFixed(6)}` : "Konum Yok";
       
       const newReport = {
-        id: Date.now(),
-        ...formData,
+        type: 'volunteer',
+        name: formData.name,
+        phone: formData.phone,
+        vehicle: formData.vehicle,
+        training: formData.training,
+        resources: formData.resources,
+        details: formData.details,
         lat: mapLocation?.lat,
         lng: mapLocation?.lng,
-        locationStr,
-        timestamp: new Date().toISOString()
       };
-      const existingReports = JSON.parse(localStorage.getItem("volunteer_reports") || "[]");
-      localStorage.setItem("volunteer_reports", JSON.stringify([newReport, ...existingReports]));
+
+      const res = await fetch('/api/db/volunteers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newReport)
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        // Sadece kendi cihazında "benim kaydım var" bilgisini tutmak için
+        localStorage.setItem("my_active_volunteer_id", data.id.toString());
+        localStorage.setItem("my_active_volunteer_phone", formData.phone);
+      }
 
       if (navigator.onLine) {
-        alert(`Gönüllü bildiriminiz ve konumunuz AFAD sistemine başarıyla iletildi!`);
+        alert(`Gönüllü bildiriminiz ve konumunuz AFAD sistemine başarıyla Supabase üzerinden iletildi!`);
       } else {
         alert(`Cihazınız çevrimdışı. Gönüllü kaydınız kaydedildi. İnternet bağlantısı sağlandığında iletilecektir.`);
       }
       localStorage.removeItem("volunteer_form_draft");
       router.push("/dashboard");
-    }, 2500);
+    } catch (error) {
+      console.error(error);
+      alert("Gönderim sırasında bir hata oluştu.");
+      setIsSending(false);
+    }
   };
 
   return (

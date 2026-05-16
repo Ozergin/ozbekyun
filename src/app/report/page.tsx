@@ -222,36 +222,50 @@ export default function ReportPage() {
     setHasManuallyMoved(true); // User took control
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSending(true);
     if (isListening) recognitionRef.current?.stop();
     
-    // Simulate WebSocket / Network send delay
-    setTimeout(() => {
+    try {
       const locationStr = mapLocation ? `${mapLocation.lat.toFixed(6)}, ${mapLocation.lng.toFixed(6)}` : "Konum Yok";
       
-      // Save to mock database for Dashboard to see
       const newReport = {
-        id: Date.now(),
-        ...formData,
+        type: 'victim',
+        name: formData.name,
+        phone: formData.phone,
+        address: formData.address,
+        details: formData.details,
         lat: mapLocation?.lat,
         lng: mapLocation?.lng,
-        locationStr,
         priority: priority || "P3",
-        timestamp: new Date().toISOString()
       };
-      const existingReports = JSON.parse(localStorage.getItem("crisis_reports") || "[]");
-      localStorage.setItem("crisis_reports", JSON.stringify([newReport, ...existingReports]));
+
+      const res = await fetch('/api/db/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newReport)
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        // Sadece kendi cihazında "benim kaydım var" bilgisini tutmak için
+        localStorage.setItem("my_active_report_id", data.id.toString());
+        localStorage.setItem("my_active_report_phone", formData.phone);
+      }
 
       if (navigator.onLine) {
-        alert(`Yardım talebiniz ve haritada işaretlediğiniz konum (${locationStr}) CANLI olarak (WebSocket ile) merkeze iletildi!`);
+        alert(`Yardım talebiniz ve haritada işaretlediğiniz konum (${locationStr}) CANLI olarak Supabase Küresel Veritabanına iletildi!`);
       } else {
-        alert(`Cihazınız çevrimdışı. Harita konumu (${locationStr}) cihazınıza kaydedildi. Bağlantı geldiğinde otomatik gönderilecektir.`);
+        alert(`Cihazınız çevrimdışı. Bağlantı geldiğinde gönderilecektir.`);
       }
       localStorage.removeItem("crisis_form_draft");
       router.push("/dashboard");
-    }, 2500);
+    } catch (error) {
+      console.error(error);
+      alert("Gönderim sırasında bir hata oluştu.");
+      setIsSending(false);
+    }
   };
 
   return (
