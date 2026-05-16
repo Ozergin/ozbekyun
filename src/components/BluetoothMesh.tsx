@@ -16,12 +16,12 @@ export default function BluetoothMesh() {
     setDeviceName(null);
 
     try {
-      if (!navigator.bluetooth) {
+      if (!(navigator as any).bluetooth) {
         throw new Error("Tarayıcınız Web Bluetooth API'yi desteklemiyor (Lütfen Chrome/Edge kullanın).");
       }
 
       // Tarayıcının donanımsal Bluetooth tarama menüsünü tetikler
-      const device = await navigator.bluetooth.requestDevice({
+      const device = await (navigator as any).bluetooth.requestDevice({
         acceptAllDevices: true,
         // İsteğe bağlı olarak sadece belirli servisleri tarayabiliriz
         // filters: [{ services: ['battery_service'] }]
