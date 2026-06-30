@@ -15,6 +15,7 @@ const DashboardMap = dynamic(() => import('@/components/DashboardMap'), {
 });
 
 export default function LiveMapWidget() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [reports, setReports] = useState<any[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -37,6 +38,7 @@ export default function LiveMapWidget() {
             fetch('/api/db/volunteers')
           ]);
           
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           let combined: any[] = [];
           if (resVictims.ok) combined = [...combined, ...(await resVictims.json())];
           if (resVols.ok) combined = [...combined, ...(await resVols.json())];
@@ -44,8 +46,8 @@ export default function LiveMapWidget() {
           if (combined.length > 0) {
             setReports(combined);
           }
-        } catch (e) {
-          console.error("Widget veri çekme hatası", e);
+        } catch {
+          console.error("Widget veri çekme hatası");
         }
       }
     };

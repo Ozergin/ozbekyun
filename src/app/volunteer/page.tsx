@@ -26,6 +26,7 @@ export default function VolunteerPage() {
   
   const [mapLocation, setMapLocation] = useState<{lat: number, lng: number} | null>(null);
   const [hasManuallyMoved, setHasManuallyMoved] = useState(false);
+  const [gpsError, setGpsError] = useState(false);
   const [saved, setSaved] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
@@ -48,6 +49,7 @@ export default function VolunteerPage() {
     const savedData = localStorage.getItem("volunteer_form_draft");
     if (savedData) {
       const parsed = JSON.parse(savedData);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         name: parsed.name || name,
         phone: parsed.phone || phone,
@@ -72,7 +74,19 @@ export default function VolunteerPage() {
     
     updateLocationDisplay();
     const locInterval = setInterval(updateLocationDisplay, 2000);
-    return () => clearInterval(locInterval);
+    
+    const timeoutId = setTimeout(() => {
+      if (!localStorage.getItem("last_known_location") && !hasManuallyMoved) {
+        setGpsError(true);
+        setMapLocation({ lat: 39.925533, lng: 32.866287 }); // Türkiye / Ankara geneli
+        setHasManuallyMoved(true); // Stop polling overwrites
+      }
+    }, 6000);
+
+    return () => {
+      clearInterval(locInterval);
+      clearTimeout(timeoutId);
+    };
   }, [router, hasManuallyMoved]);
 
   useEffect(() => {
@@ -96,9 +110,8 @@ export default function VolunteerPage() {
     setIsSending(true);
     
     try {
-      const locationStr = mapLocation ? `${mapLocation.lat.toFixed(6)}, ${mapLocation.lng.toFixed(6)}` : "Konum Yok";
-      
-      const newReport: any = {
+      // (locationStr was unused, so removed)
+      const newReport: Record<string, unknown> = {
         type: 'volunteer',
         name: formData.name,
         phone: formData.phone,
@@ -189,13 +202,17 @@ export default function VolunteerPage() {
         </div>
 
         {/* Live Location Map Box */}
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+        <div className={`border rounded-xl p-4 mb-6 ${gpsError ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
           <div className="flex items-start space-x-3 mb-4">
-            <MapPin className="w-6 h-6 text-green-600 shrink-0 mt-1" />
+            <MapPin className={`w-6 h-6 shrink-0 mt-1 ${gpsError ? 'text-red-600 animate-pulse' : 'text-green-600'}`} />
             <div>
-              <p className="font-bold text-green-900">Bulunduğunuz Konum</p>
-              <p className="text-xs text-green-800 mt-1">
-                Eğer farklı bir bölgeye yardım götürecekseniz pini o bölgeye sürükleyebilirsiniz.
+              <p className={`font-bold ${gpsError ? 'text-red-900' : 'text-green-900'}`}>
+                {gpsError ? "GPS İzni Alınamadı!" : "Bulunduğunuz Konum"}
+              </p>
+              <p className={`text-xs mt-1 ${gpsError ? 'text-red-700 font-bold' : 'text-green-800'}`}>
+                {gpsError 
+                  ? "Cihazınızdan konum alamadık. Lütfen gitmek istediğiniz veya bulunduğunuz noktayı haritadan ELİNİZLE İŞARETLEYİN." 
+                  : "Eğer farklı bir bölgeye yardım götürecekseniz pini o bölgeye sürükleyebilirsiniz."}
               </p>
             </div>
           </div>

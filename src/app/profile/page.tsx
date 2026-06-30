@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldAlert, CheckCircle2 } from "lucide-react";
+import { UserCircle, CheckCircle2, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 const isValidTCKN = (tckn: string) => {
   if (tckn.length !== 11 || tckn[0] === '0') return false;
@@ -18,7 +19,7 @@ const isValidTCKN = (tckn: string) => {
   return digits[9] === digit10 && digits[10] === digit11;
 };
 
-export default function RegisterPage() {
+export default function ProfilePage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     firstName: "",
@@ -29,8 +30,29 @@ export default function RegisterPage() {
     bloodType: "Bilinmiyor",
     medicalInfo: "",
   });
-
+  
+  const [isLoaded, setIsLoaded] = useState(false);
   const [tcknError, setTcknError] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  useEffect(() => {
+    const profileStr = localStorage.getItem("crisis_user_profile");
+    if (profileStr) {
+      const parsed = JSON.parse(profileStr);
+      setFormData({
+        firstName: parsed.firstName || "",
+        lastName: parsed.lastName || "",
+        tckn: parsed.tckn || "",
+        phone: parsed.phone || "",
+        address: parsed.address || "",
+        bloodType: parsed.bloodType || "Bilinmiyor",
+        medicalInfo: parsed.medicalInfo || "",
+      });
+    } else {
+      router.push("/register");
+    }
+    setIsLoaded(true);
+  }, [router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -48,17 +70,34 @@ export default function RegisterPage() {
     }
 
     localStorage.setItem("crisis_user_profile", JSON.stringify(formData));
-    router.push("/");
+    setShowSuccess(true);
+    setTimeout(() => {
+      router.push("/");
+    }, 1500);
   };
 
+  if (!isLoaded) return null;
+
   return (
-    <div className="max-w-md mx-auto w-full px-4 py-12">
-      <div className="bg-white shadow-xl rounded-3xl p-6 md:p-8 border-t-8 border-primary-navy">
+    <div className="max-w-md mx-auto w-full px-4 py-8">
+      <Link href="/" className="inline-flex items-center text-primary-navy font-semibold mb-6 hover:underline">
+        <ArrowLeft className="w-5 h-5 mr-2" /> Geri Dön
+      </Link>
+
+      <div className="bg-white shadow-xl rounded-3xl p-6 md:p-8 border-t-8 border-primary-navy relative">
+        {showSuccess && (
+          <div className="absolute inset-0 bg-white/95 z-10 flex flex-col items-center justify-center rounded-3xl">
+            <CheckCircle2 className="w-20 h-20 text-green-500 mb-4" />
+            <h2 className="text-2xl font-bold text-primary-navy">Profil Güncellendi</h2>
+            <p className="text-slate-600 mt-2">Ana sayfaya yönlendiriliyorsunuz...</p>
+          </div>
+        )}
+
         <div className="flex flex-col items-center justify-center mb-8 space-y-4">
-          <ShieldAlert className="w-16 h-16 text-primary-navy" />
-          <h1 className="text-3xl font-extrabold text-primary-navy text-center">Sisteme Kayıt Ol</h1>
+          <UserCircle className="w-16 h-16 text-primary-navy" />
+          <h1 className="text-3xl font-extrabold text-primary-navy text-center">Profilimi Güncelle</h1>
           <p className="text-slate-500 text-center text-sm font-medium">
-            Afet anında size en hızlı şekilde ulaşabilmemiz için bilgilerinizi yerel olarak cihazınıza kaydediyoruz. İnternet olmasa bile bilgileriniz güvende.
+            Kişisel ve sağlık bilgilerinizi buradan güncelleyebilirsiniz.
           </p>
         </div>
 
@@ -97,10 +136,8 @@ export default function RegisterPage() {
               onChange={handleChange}
               maxLength={11}
               className={`w-full bg-slate-50 border-2 rounded-xl px-4 py-3 focus:outline-none transition-colors ${tcknError ? 'border-red-500 focus:border-red-600' : 'border-slate-200 focus:border-primary-navy'}`}
-              placeholder="11 Haneli TCKN"
             />
             {tcknError && <p className="text-red-500 text-xs font-bold mt-1">{tcknError}</p>}
-            <p className="text-xs text-slate-400 mt-1">Sadece acil durumlarda sahte ihbarları önlemek için algoritmik olarak doğrulanır.</p>
           </div>
 
           <div>
@@ -111,7 +148,6 @@ export default function RegisterPage() {
               value={formData.phone}
               onChange={handleChange}
               className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-navy transition-colors"
-              placeholder="05XX XXX XX XX"
               required
             />
           </div>
@@ -124,7 +160,6 @@ export default function RegisterPage() {
               onChange={handleChange}
               rows={3}
               className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-navy transition-colors resize-none"
-              placeholder="Mahalle, Sokak, Bina No, İlçe/İl"
               required
             ></textarea>
           </div>
@@ -159,9 +194,7 @@ export default function RegisterPage() {
                   onChange={handleChange}
                   rows={2}
                   className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-navy transition-colors resize-none"
-                  placeholder="Örn: Astım hastası, İnsülin kullanıyor, Kalp pili var..."
                 ></textarea>
-                <p className="text-xs text-slate-400 mt-1">Bu bilgiler çağrı sırasında AFAD'a iletilir ve ekiplerin hazırlıklı olmasını sağlar.</p>
               </div>
             </div>
           </div>
@@ -171,7 +204,7 @@ export default function RegisterPage() {
             className="w-full bg-primary-navy hover:bg-slate-800 text-white font-extrabold text-lg py-4 rounded-2xl shadow-lg flex items-center justify-center space-x-2 transition-transform active:scale-95 mt-4"
           >
             <CheckCircle2 className="w-5 h-5" />
-            <span>Kaydı Tamamla</span>
+            <span>Bilgileri Güncelle</span>
           </button>
         </form>
       </div>

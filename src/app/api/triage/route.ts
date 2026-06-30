@@ -44,7 +44,7 @@ SADECE VE SADECE AŞAĞIDAKİ JSON FORMATINDA CEVAP VER, BAŞKA HİÇBİR AÇIKL
     const data = JSON.parse(response.text);
     return NextResponse.json(data);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Gemini API Error:', error);
     return NextResponse.json({ error: 'Analiz yapılamadı', fallback: true }, { status: 500 });
   }

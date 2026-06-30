@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -47,7 +48,21 @@ const iconVol = new L.Icon({
   shadowSize: [41, 41]
 });
 
-export default function DashboardMap({ reports, focusedReportId, isWidget = false }: { reports: any[], focusedReportId: number | null, isWidget?: boolean }) {
+interface ReportMarker {
+  id?: number;
+  lat?: number;
+  lng?: number;
+  type?: string;
+  name?: string;
+  phone?: string;
+  priority?: string;
+  details?: string;
+  vehicle?: string;
+  training?: string;
+  resources?: string;
+}
+
+export default function DashboardMap({ reports, focusedReportId, isWidget = false }: { reports: ReportMarker[], focusedReportId: number | null, isWidget?: boolean }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const markersLayer = useRef<L.LayerGroup | null>(null);
@@ -76,6 +91,7 @@ export default function DashboardMap({ reports, focusedReportId, isWidget = fals
         mapInstance.current = null;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // isWidget prop'u değiştiğinde haritayı güncelle (Tam Ekran geçişleri için)
@@ -96,7 +112,7 @@ export default function DashboardMap({ reports, focusedReportId, isWidget = fals
     if (!mapInstance.current || !markersLayer.current) return;
     
     markersLayer.current.clearLayers();
-    const validReports = reports.filter(r => r.lat && r.lng);
+    const validReports = reports.filter((r): r is ReportMarker & { lat: number, lng: number } => r.lat !== undefined && r.lng !== undefined);
     
     validReports.forEach(r => {
       let icon = iconP3;
@@ -125,9 +141,11 @@ export default function DashboardMap({ reports, focusedReportId, isWidget = fals
         `;
       }
 
-      const marker = L.marker([r.lat, r.lng], { icon });
-      marker.bindPopup(popupContent);
-      markersLayer.current?.addLayer(marker);
+      if (r.lat && r.lng) {
+        const marker = L.marker([r.lat, r.lng], { icon });
+        marker.bindPopup(popupContent);
+        markersLayer.current?.addLayer(marker);
+      }
     });
 
     // Eğer odaklanmış bir id yoksa tüm pinleri kapsayacak şekilde haritayı ortala

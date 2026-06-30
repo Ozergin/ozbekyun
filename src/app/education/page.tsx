@@ -141,8 +141,25 @@ const modalListItemVariants = {
   show: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
 };
 
+type ContentItem = { text: string; media?: string };
+type Disaster = {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  image: string;
+  color: string;
+  shadow: string;
+  description: string;
+  content: {
+    before: ContentItem[];
+    during: ContentItem[];
+    after: ContentItem[];
+  };
+};
+
 export default function EducationPage() {
-  const [activeCard, setActiveCard] = useState<any | null>(null);
+  const [activeCard, setActiveCard] = useState<Disaster | null>(null);
 
   return (
     <div className="flex-1 flex flex-col w-full min-h-screen bg-slate-50 text-slate-900 font-sans relative overflow-x-hidden">
@@ -334,7 +351,7 @@ export default function EducationPage() {
                         Afet Öncesi (Hazırlık)
                       </h3>
                       <ul className="space-y-4">
-                        {activeCard.content.before.map((item: any, i: number) => (
+                        {activeCard.content.before.map((item, i) => (
                           <li key={i} className="flex flex-col text-slate-700 font-medium text-lg">
                             <div className="flex items-start">
                               <span className="w-2 h-2 rounded-full bg-sky-400 mt-2.5 mr-4 shrink-0 shadow-sm shadow-sky-300"></span>
@@ -342,6 +359,7 @@ export default function EducationPage() {
                             </div>
                             {item.media && (
                               <div className="mt-4 ml-6 rounded-2xl overflow-hidden border-4 border-slate-100 shadow-sm w-full sm:max-w-xs transition-transform hover:scale-105">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={item.media} alt="Öğretici Animasyon" className="w-full h-auto object-cover" />
                               </div>
                             )}
@@ -360,7 +378,7 @@ export default function EducationPage() {
                         Afet Anında (Hayatta Kalma)
                       </h3>
                       <ul className="space-y-4">
-                        {activeCard.content.during.map((item: any, i: number) => (
+                        {activeCard.content.during.map((item, i) => (
                           <li key={i} className="flex flex-col text-slate-700 font-medium text-lg">
                             <div className="flex items-start">
                               <span className="w-2 h-2 rounded-full bg-red-500 mt-2.5 mr-4 shrink-0 shadow-sm shadow-red-300"></span>
@@ -368,6 +386,7 @@ export default function EducationPage() {
                             </div>
                             {item.media && (
                               <div className="mt-4 ml-6 rounded-2xl overflow-hidden border-4 border-red-50 shadow-sm w-full sm:max-w-xs transition-transform hover:scale-105">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={item.media} alt="Öğretici Animasyon" className="w-full h-auto object-cover" />
                               </div>
                             )}
@@ -386,7 +405,7 @@ export default function EducationPage() {
                         Afet Sonrası (Kurtuluş)
                       </h3>
                       <ul className="space-y-4">
-                        {activeCard.content.after.map((item: any, i: number) => (
+                        {activeCard.content.after.map((item, i) => (
                           <li key={i} className="flex flex-col text-slate-700 font-medium text-lg">
                             <div className="flex items-start">
                               <span className="w-2 h-2 rounded-full bg-emerald-500 mt-2.5 mr-4 shrink-0 shadow-sm shadow-emerald-300"></span>
@@ -394,6 +413,7 @@ export default function EducationPage() {
                             </div>
                             {item.media && (
                               <div className="mt-4 ml-6 rounded-2xl overflow-hidden border-4 border-emerald-50 shadow-sm w-full sm:max-w-xs transition-transform hover:scale-105">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={item.media} alt="Öğretici Animasyon" className="w-full h-auto object-cover" />
                               </div>
                             )}

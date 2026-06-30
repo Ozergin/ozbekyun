@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldAlert, ArrowLeft, MapPin, Phone, User, Clock, HandHeart, Truck, BookOpen, Package, Trash2 } from "lucide-react";
+import { ShieldAlert, ArrowLeft, MapPin, Phone, User, Clock, HandHeart, Truck, BookOpen, Package } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import dynamic from 'next/dynamic';
@@ -11,9 +11,25 @@ const DashboardMap = dynamic(() => import('@/components/DashboardMap'), {
   loading: () => <div className="h-full w-full bg-slate-200 animate-pulse rounded-3xl border-4 border-white"></div> 
 });
 
+interface ReportData {
+  id: number;
+  priority?: string;
+  timestamp: string;
+  lat?: number;
+  lng?: number;
+  details?: string;
+  name?: string;
+  phone?: string;
+  address?: string;
+  resources?: string;
+  vehicle?: string;
+  training?: string;
+  [key: string]: unknown;
+}
+
 export default function DashboardPage() {
-  const [victimReports, setVictimReports] = useState<any[]>([]);
-  const [volunteerReports, setVolunteerReports] = useState<any[]>([]);
+  const [victimReports, setVictimReports] = useState<ReportData[]>([]);
+  const [volunteerReports, setVolunteerReports] = useState<ReportData[]>([]);
   const [focusedId, setFocusedId] = useState<number | null>(null);
   
   // Tab State: 'victims' veya 'volunteers'
@@ -45,7 +61,7 @@ export default function DashboardPage() {
           setVolunteerReports(data);
           localStorage.setItem("volunteer_reports_cache", JSON.stringify(data)); // Cache'i tazele
         }
-      } catch (err) {
+      } catch {
         // Hata verirse (çevrimdışı vb.) sessizce yut, çünkü zaten ekranda Cache verisi var!
         console.log("Offline mode: Using cached data.");
       }
@@ -165,7 +181,7 @@ export default function DashboardPage() {
                 {/* List Content based on Tab */}
                 {activeTab === 'victims' ? (
                   <>
-                    <p className="text-lg font-bold text-slate-800 mb-2">"{r.details}"</p>
+                    <p className="text-lg font-bold text-slate-800 mb-2">&quot;{r.details}&quot;</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-slate-600 mt-4 bg-white/50 p-3 rounded-lg border border-slate-100">
                       <div className="flex items-center space-x-2"><User className="w-4 h-4 text-primary-navy" /> <span className="font-medium">{r.name}</span></div>
                       <div className="flex items-center space-x-2"><Phone className="w-4 h-4 text-primary-navy" /> <span>{r.phone}</span></div>
@@ -174,7 +190,7 @@ export default function DashboardPage() {
                   </>
                 ) : (
                   <>
-                    <p className="text-lg font-bold text-slate-800 mb-2"><span className="text-slate-500 text-sm font-normal">Sağlayacağı Kaynak:</span> <br/> "{r.resources}"</p>
+                    <p className="text-lg font-bold text-slate-800 mb-2"><span className="text-slate-500 text-sm font-normal">Sağlayacağı Kaynak:</span> <br/> &quot;{r.resources}&quot;</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-slate-600 mt-4 bg-white/50 p-3 rounded-lg border border-slate-100">
                       <div className="flex items-center space-x-2"><User className="w-4 h-4 text-primary-navy" /> <span className="font-medium">{r.name}</span></div>
                       <div className="flex items-center space-x-2"><Phone className="w-4 h-4 text-primary-navy" /> <span>{r.phone}</span></div>

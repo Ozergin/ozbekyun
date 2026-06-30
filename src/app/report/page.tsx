@@ -23,6 +23,7 @@ export default function ReportPage() {
   
   const [mapLocation, setMapLocation] = useState<{lat: number, lng: number} | null>(null);
   const [hasManuallyMoved, setHasManuallyMoved] = useState(false);
+  const [gpsError, setGpsError] = useState(false);
 
   const [priority, setPriority] = useState<"P1" | "P2" | "P3" | null>(null);
   const [saved, setSaved] = useState(false);
@@ -35,6 +36,7 @@ export default function ReportPage() {
   // Voice Recognition State
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(true);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
 
   // Load from local storage
@@ -65,11 +67,9 @@ export default function ReportPage() {
         details: parsed.details || "",
       });
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({ name, phone, address, details: "" });
     }
 
-    // Interval to refresh last known location
     const updateLocationDisplay = () => {
       if (hasManuallyMoved) return; // Do not overwrite if user moved pin
       const locStr = localStorage.getItem("last_known_location");
@@ -81,15 +81,48 @@ export default function ReportPage() {
     
     updateLocationDisplay();
     const locInterval = setInterval(updateLocationDisplay, 2000);
-    return () => clearInterval(locInterval);
+    
+    const timeoutId = setTimeout(() => {
+      if (!localStorage.getItem("last_known_location") && !hasManuallyMoved) {
+        setGpsError(true);
+        setMapLocation({ lat: 39.925533, lng: 32.866287 }); // Türkiye / Ankara geneli
+        setHasManuallyMoved(true); // Stop polling overwrites
+      }
+    }, 6000);
+
+    return () => {
+      clearInterval(locInterval);
+      clearTimeout(timeoutId);
+    };
   }, [router, hasManuallyMoved]);
+
+  const fallbackTriage = (text: string) => {
+    const t = text.toLowerCase();
+    if (t.includes("kanama") || t.includes("mahsur") || t.includes("nefes") || t.includes("oksijen") || t.includes("kalp") || t.includes("enkaz")) {
+      setPriority("P1");
+      setAiReason("İnternet yok: Çevrimdışı kelime bazlı analiz (Kritik)");
+    } else if (t.includes("yaralı") || t.includes("kırık") || t.includes("su") || t.includes("yardım")) {
+      setPriority("P2");
+      setAiReason("İnternet yok: Çevrimdışı kelime bazlı analiz (Acil)");
+    } else if (text.length > 5) {
+      setPriority("P3");
+      setAiReason("İnternet yok: Çevrimdışı kelime bazlı analiz (Hafif)");
+    } else {
+      setPriority(null);
+      setAiReason("");
+    }
+  };
+
+  // Tüm form verisi değiştiğinde taslağı kaydet
+  useEffect(() => {
+    localStorage.setItem("crisis_form_draft", JSON.stringify(formData));
+  }, [formData]);
 
   // AI Triage API Call (Debounced)
   useEffect(() => {
-    localStorage.setItem("crisis_form_draft", JSON.stringify(formData));
-
     const text = formData.details;
     if (text.length < 10) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPriority(null);
       setAiReason("");
       return;
@@ -115,7 +148,7 @@ export default function ReportPage() {
           } else {
             fallbackTriage(text);
           }
-        } catch (e) {
+        } catch {
           fallbackTriage(text);
         }
       } else {
@@ -127,28 +160,15 @@ export default function ReportPage() {
     return () => {
       if (triageTimeoutRef.current) clearTimeout(triageTimeoutRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.details]);
 
-  const fallbackTriage = (text: string) => {
-    const t = text.toLowerCase();
-    if (t.includes("kanama") || t.includes("mahsur") || t.includes("nefes") || t.includes("oksijen") || t.includes("kalp") || t.includes("enkaz")) {
-      setPriority("P1");
-      setAiReason("İnternet yok: Çevrimdışı kelime bazlı analiz (Kritik)");
-    } else if (t.includes("yaralı") || t.includes("kırık") || t.includes("su") || t.includes("yardım")) {
-      setPriority("P2");
-      setAiReason("İnternet yok: Çevrimdışı kelime bazlı analiz (Acil)");
-    } else if (text.length > 5) {
-      setPriority("P3");
-      setAiReason("İnternet yok: Çevrimdışı kelime bazlı analiz (Hafif)");
-    } else {
-      setPriority(null);
-      setAiReason("");
-    }
-  };
+
 
   // Initialize Speech Recognition
   useEffect(() => {
     if (typeof window !== "undefined") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
         recognitionRef.current = new SpeechRecognition();
@@ -156,6 +176,7 @@ export default function ReportPage() {
         recognitionRef.current.interimResults = true;
         recognitionRef.current.lang = "tr-TR";
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         recognitionRef.current.onresult = (event: any) => {
           let currentTranscript = "";
           for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -175,6 +196,7 @@ export default function ReportPage() {
           }
         };
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         recognitionRef.current.onerror = (event: any) => {
           console.error("Speech recognition error", event.error);
           setIsListening(false);
@@ -184,6 +206,7 @@ export default function ReportPage() {
           setIsListening(false);
         };
       } else {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSpeechSupported(false);
       }
     }
@@ -228,14 +251,28 @@ export default function ReportPage() {
     if (isListening) recognitionRef.current?.stop();
     
     try {
+      const profileStr = localStorage.getItem("crisis_user_profile");
+      let medicalContext = "";
+      if (profileStr) {
+        const p = JSON.parse(profileStr);
+        if (p.bloodType && p.bloodType !== "Bilinmiyor") {
+          medicalContext += `\n[Kan Grubu: ${p.bloodType}]`;
+        }
+        if (p.medicalInfo && p.medicalInfo.trim() !== "") {
+          medicalContext += `\n[Sağlık Bilgisi: ${p.medicalInfo}]`;
+        }
+      }
+
+      const finalDetails = formData.details + (medicalContext ? `\n---${medicalContext}` : "");
+
       const locationStr = mapLocation ? `${mapLocation.lat.toFixed(6)}, ${mapLocation.lng.toFixed(6)}` : "Konum Yok";
       
-      const newReport: any = {
+      const newReport: Record<string, unknown> = {
         type: 'victim',
         name: formData.name,
         phone: formData.phone,
         address: formData.address,
-        details: formData.details,
+        details: finalDetails,
         lat: mapLocation?.lat,
         lng: mapLocation?.lng,
         priority: priority || "P3",
@@ -318,13 +355,17 @@ export default function ReportPage() {
         </div>
 
         {/* Live Location Map Box */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+        <div className={`border rounded-xl p-4 mb-6 ${gpsError ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
           <div className="flex items-start space-x-3 mb-4">
-            <MapPin className="w-6 h-6 text-blue-600 shrink-0 mt-1" />
+            <MapPin className={`w-6 h-6 shrink-0 mt-1 ${gpsError ? 'text-red-600 animate-pulse' : 'text-blue-600'}`} />
             <div>
-              <p className="font-bold text-blue-900">Haritadan Konumunuzu İşaretleyin</p>
-              <p className="text-xs text-blue-700 mt-1">
-                GPS'ten otomatik alınan konum haritada işaretlenmiştir. Eğer yanlışlık varsa pini doğru bölgeye <strong className="underline">sürükleyip bırakabilirsiniz</strong>.
+              <p className={`font-bold ${gpsError ? 'text-red-900' : 'text-blue-900'}`}>
+                {gpsError ? "GPS İzni Alınamadı!" : "Haritadan Konumunuzu İşaretleyin"}
+              </p>
+              <p className={`text-xs mt-1 ${gpsError ? 'text-red-700 font-bold' : 'text-blue-700'}`}>
+                {gpsError 
+                  ? "Cihazınızdan konum alamadık. Lütfen harita üzerinden tam konumunuzu ELİNİZLE İŞARETLEYİN." 
+                  : "GPS'ten otomatik alınan konum haritada işaretlenmiştir. Eğer yanlışlık varsa pini doğru bölgeye sürükleyip bırakabilirsiniz."}
               </p>
             </div>
           </div>

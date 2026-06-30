@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Wifi, WifiOff, ShieldAlert, MapPin, BookOpen, Menu, X } from "lucide-react";
+import { Wifi, WifiOff, ShieldAlert, MapPin, BookOpen, Menu, X, UserCircle } from "lucide-react";
 import Link from "next/link";
 
 export default function Navbar() {
@@ -64,6 +64,9 @@ export default function Navbar() {
             <Link href="/dashboard" className="flex items-center text-xs font-bold bg-white text-primary-navy px-3 py-1.5 rounded-full hover:bg-slate-200 transition-colors">
               <ShieldAlert className="w-4 h-4 mr-1" /> AFAD Paneli
             </Link>
+            <Link href="/profile" className="flex items-center text-xs font-bold bg-white/20 text-white px-3 py-1.5 rounded-full hover:bg-white/30 transition-colors">
+              <UserCircle className="w-4 h-4 mr-1" /> Profil
+            </Link>
             {hasLocation && (
               <div className="flex items-center space-x-1 bg-white/10 px-3 py-1.5 rounded-full text-xs font-medium">
                 <MapPin className="w-3 h-3 text-blue-400" />
@@ -121,6 +124,13 @@ export default function Navbar() {
               className="flex items-center text-sm font-bold bg-white text-primary-navy px-4 py-3 rounded-xl hover:bg-slate-200 transition-colors"
             >
               <ShieldAlert className="w-5 h-5 mr-3" /> AFAD Paneli
+            </Link>
+            <Link 
+              href="/profile" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center text-sm font-bold bg-white/10 text-white px-4 py-3 rounded-xl hover:bg-white/20 transition-colors"
+            >
+              <UserCircle className="w-5 h-5 mr-3" /> Profilimi Düzenle
             </Link>
             
             <div className="pt-2 border-t border-slate-700 flex justify-between items-center text-sm">

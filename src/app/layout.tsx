@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import Navbar from "@/components/Navbar";
+import OfflineSyncManager from "@/components/OfflineSyncManager";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,6 +43,7 @@ export default function RootLayout({
   return (
     <html lang="tr" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="min-h-screen flex flex-col bg-background text-foreground antialiased selection:bg-primary-green selection:text-white">
+        <OfflineSyncManager />
         <Navbar />
         <main className="flex-1 flex flex-col">
           {children}

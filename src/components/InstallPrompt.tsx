@@ -4,15 +4,16 @@ import { useState, useEffect } from "react";
 import { Download, X, Share } from "lucide-react";
 
 export default function InstallPrompt() {
-  const [isInstallable, setIsInstallable] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(true);
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
 
   useEffect(() => {
-    // Uygulama zaten yüklüyse veya tarayıcı PWA modundaysa gizle
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const standalone = window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsStandalone(standalone);
 
     // iOS Tespiti
@@ -20,15 +21,10 @@ export default function InstallPrompt() {
     const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
     setIsIOS(isIosDevice);
 
-    if (isIosDevice && !standalone) {
-      setIsInstallable(true);
-    }
-
-    // Android/Chrome PWA Kurulum Etkinliği (Event)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault(); // Varsayılan pop-up'ı engelle
       setDeferredPrompt(e);
-      setIsInstallable(true);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
@@ -52,10 +48,7 @@ export default function InstallPrompt() {
 
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === "accepted") {
-      setIsInstallable(false);
-    }
+    console.log(outcome);
     setDeferredPrompt(null);
   };
 
@@ -77,9 +70,9 @@ export default function InstallPrompt() {
             <Share className="w-6 h-6 text-sky-400" />
           </div>
           <div>
-            <h4 className="font-bold text-sm mb-1">iPhone'a Yükle</h4>
+            <h4 className="font-bold text-sm mb-1">iPhone&apos;a Yükle</h4>
             <p className="text-xs text-slate-300">
-              Safari'nin alt menüsündeki <strong>Paylaş</strong> ikonuna basın, ardından aşağı kaydırıp <strong>"Ana Ekrana Ekle"</strong> seçeneğini seçin.
+              Safari&apos;nin alt menüsündeki <strong>Paylaş</strong> ikonuna basın, ardından aşağı kaydırıp <strong>&quot;Ana Ekrana Ekle&quot;</strong> seçeneğini seçin.
             </p>
           </div>
         </div>

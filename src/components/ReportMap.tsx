@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Fix for default marker icons in Next.js/Webpack
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -54,6 +54,7 @@ export default function ReportMap({ location, onChange }: ReportMapProps) {
         markerInstance.current = null;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Sadece ilk yüklemede çalışır.
 
   // 3. Update Phase: Dışarıdan location değişirse sadece görünümü (view) güncelle
